@@ -94,8 +94,8 @@ def google_translate_text(target, text, current_font, current_size, current_page
 
     headers = {
         "content-type": "application/json",
-        "X-RapidAPI-Key": "6a5c39e152msh88054e9b554694ep10e5b7jsnda65a5963add",
-        "X-RapidAPI-Host": "google-translator9.p.rapidapi.com"
+        "X-RapidAPI-Key": os.environ.get('RAPID_API_KEY'),
+        "X-RapidAPI-Host": os.environ.get('RAPID_API_HOST')
     }
 
     response = requests.request("POST", url, json=payload, headers=headers).json()
