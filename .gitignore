@@ -128,4 +128,21 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# User defined
+*.env
+*.png
+*.jpeg
+*.jpg
+icons
+documentation.docx
+Pipfile
 
+
+# User defined
+*.env
+*.png
+*.jpeg
+*.jpg
+icons
+documentation.docx
+Pipfile
