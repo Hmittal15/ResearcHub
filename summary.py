@@ -22,7 +22,7 @@ user_bucket = os.environ.get('USER_BUCKET_NAME')
 user_doc_title = "Carbon Fiber-Reinforced Polyurethane Composites with Modified Carbon–Polymer Interface"
 summary=''
 
-table_name="SPRINGER"
+table_name="springer_metadata"
 db_name="researchub.db"
 db_engine=create_engine("sqlite:///" + db_name)
 

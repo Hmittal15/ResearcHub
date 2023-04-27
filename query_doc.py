@@ -46,7 +46,7 @@ def doc_query(query):
 def vector_encoding(user_doc_title):
     model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
-    table_name="SPRINGER"
+    table_name="springer_metadata"
     db_name="researchub.db"
     db_engine=create_engine("sqlite:///" + db_name)
 

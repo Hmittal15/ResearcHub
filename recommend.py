@@ -23,7 +23,7 @@ def vector_query():
     user_doc_title="Tactile perception of textile fabrics based on friction and brain activation"
     user_doc_abstract=''
     user_doc_keywords=''
-    table_name="SPRINGER"
+    table_name="springer_metadata"
     db_name="researchub.db"
     db_engine=create_engine("sqlite:///" + db_name)
 
@@ -69,7 +69,7 @@ def vector_query():
 def vector_encoding():
     model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
-    table_name="SPRINGER"
+    table_name="springer_metadata"
     db_name="researchub.db"
     db_engine=create_engine("sqlite:///" + db_name)
 
