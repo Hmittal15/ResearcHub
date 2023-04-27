@@ -30,6 +30,13 @@ jobs:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
           USER_BUCKET_NAME: ${{ secrets.USER_BUCKET_NAME }}
+          OPENAI_ACCESS_KEY: ${{ secrets.OPENAI_ACCESS_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          PINECONE_ENV: ${{ secrets.PINECONE_ENV }}
+          PINECONE_API_KEY_DOC: ${{ secrets.PINECONE_API_KEY_DOC }}
+          PINECONE_ENV_DOC: ${{ secrets.PINECONE_ENV_DOC }}
+          RAPID_API_HOST: ${{ secrets.RAPID_API_HOST }}
+          RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
         run: |
           pipenv install -r requirements.txt
           pipenv run pytest -v
