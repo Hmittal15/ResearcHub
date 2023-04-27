@@ -1036,7 +1036,7 @@ def update_password(username, password):
     password_hash = pwd_context.hash(password)
 
     s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'users.db'))
+    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
     c = db.cursor()
 
     c.execute("UPDATE users SET password=? WHERE username=?", (password_hash, username))

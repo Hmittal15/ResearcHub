@@ -11,10 +11,7 @@ from pages.Login import my_token
 
 if 'access_token' not in st.session_state:
     st.session_state.access_token = ''
-
-if 'access_token' not in st.session_state:
-    st.session_state.access_token = ''
-
+    
 if 'encode_flag' not in st.session_state:
     st.session_state.encode_flag=0
 
