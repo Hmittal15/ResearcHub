@@ -27,6 +27,10 @@ s3client = boto3.client('s3',
                         aws_secret_access_key = os.environ.get('AWS_SECRET_KEY')
                         )
 
+goes18_bucket = 'noaa-goes18'
+user_bucket_name = os.environ.get('USER_BUCKET_NAME')
+nexrad_bucket = 'noaa-nexrad-level2'
+
 @app.post("/token", status_code=200, tags=["Authenticate"])
 async def login_for_access_token(request: OAuth2PasswordRequestForm = Depends()):
     all_data=basic_func.get_users_data()
@@ -57,104 +61,127 @@ async def read_users_me(current_user: base_model.User = Depends(basic_func.get_c
 
 
 @app.post("/add-user", tags=["CLI"])
-async def add_user(username: str, password: str, email: str, full_name: str, plan: str, role: str) -> dict:
+async def add_user(username: str, password: str, email: str, full_name: str, plan: str,
+                   get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
-    output = basic_func.add_user(username, password, email, full_name, plan, role)
+    basic_func.add_user(username, password, email, full_name, plan)
 
-    return {"user" : output}
+    return {"user" : "User added"}
 
 
 @app.post("/check-user-exists", tags=["CLI"])
-async def check_user_exists(username: str) -> dict:
+async def check_user_exists(username: str,
+                            get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
     status = basic_func.check_user_exists(username)
 
     return {"user" : status}
 
 
-@app.get("/list-document-type", tags=["Filters"])
-def list_document_type():
+@app.get("/list-filter", tags=["Filters"])
+def list_filter(doc_type, subject, language, sort, author_name, keyword):
     # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
-
-    # Establishes a connection to the goes database
-    # c = basic_func.conn_metadata()
 
     # Lists the years present in goes database
-    doc_type_list = basic_func.list_doc_type()
+    filter_list = basic_func.list_filters(doc_type, subject, language, sort, author_name, keyword)
 
-    # Clean up
-    # basic_func.conn_close(c)
-
-    basic_func.write_logs_researchub(message='listed doc types', endpoint='list_doc_type')
+    return {'filter_list': filter_list }
 
 
-    return {'doc_type_list': doc_type_list }
-
-
-@app.get("/endpoint-calls", tags=["Filters"])
-def endpoint_calls():
+@app.post("/endpoint-calls", tags=["Filters"])
+def endpoint_calls(endpoint = 'any', username = 'admin', duration = 'none'):
     # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
-    # # Establishes a connection to the goes database
-    # c = basic_func.conn_metadata()
-
-    # # Lists the years present in goes database
-    # doc_type_list = basic_func.list_doc_type(c)
-
-    # # Clean up
-    # basic_func.conn_close(c)
-
-    # basic_func.write_logs_researchub(message='listed doc types', endpoint='list_doc_type')
-
-    doc_type_list = basic_func.get_endpoint_count_for_username()
+    endpoint_calls_count = basic_func.get_endpoint_count_for_username(endpoint, username, duration)
     
+    return {'endpoint_calls_count': endpoint_calls_count }
 
-    return {'doc_type_list': doc_type_list }
 
-
-@app.post("/list-subject", tags=["Filters"])
-def list_subject(doc_type:str):
+@app.post("/download-url", tags=["Filters"])
+def list_document(selected_doc : str, username = 'user-test'):
     # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
-    # Establishes a connection to the goes database
-    c = basic_func.conn_metadata()
+    # Generates the link to download the selected document
+    download_link = basic_func.download_document(selected_doc, username)
 
-    # Lists the years present in goes database
-    subject_list = basic_func.list_subjects(c, doc_type)
-
-    # Clean up
-    basic_func.conn_close(c)
-
-    return {'subject_list': subject_list }
+    return {'download_link': download_link }
 
 
-@app.post("/list-language", tags=["Filters"])
-def list_language(doc_type:str, subject:str):
+@app.post("/summary-generation", tags=["Filters"])
+def summary_generation(user_doc_title : str, username = 'user-test'):
     # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
-    # Establishes a connection to the goes database
-    c = basic_func.conn_metadata()
-
     # Lists the years present in goes database
-    language_list = basic_func.list_languages(c, doc_type, subject)
+    summary = basic_func.generate_summary(user_doc_title, username) 
 
-    # Clean up
-    basic_func.conn_close(c)
-
-    return {'language_list': language_list }
+    return {'summary': summary }
 
 
-@app.post("/list-document", tags=["Filters"])
-def list_document(doc_type:str, subject:str, sort_criteria:str):
+@app.post("/translation-generation", tags=["Filters"])
+def translation_generation(filename : str, username : str, translate_to : str):
     # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
-    # Establishes a connection to the goes database
-    c = basic_func.conn_metadata()
+    # Lists the years present in goes database
+    translation = basic_func.generate_translation(filename, username, translate_to)
+
+    return {'translation': translation }
+
+
+@app.post("/recommendation-generation", tags=["Filters"])
+def recommendation_generation(user_doc_title : str, username = 'user-test'):
+    # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
     # Lists the years present in goes database
-    document_list = basic_func.list_documents(c, doc_type, subject, sort_criteria)
+    recommendation = basic_func.generate_recommendation(user_doc_title, username)
 
-    # Clean up
-    basic_func.conn_close(c)
+    return {'recommendation': recommendation }
 
-    return {'document_list': document_list }
+
+@app.post("/initialize-vec-db", tags=["Filters"])
+def initialize_vec_db():
+    # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
+
+    # Lists the years present in goes database
+    basic_func.initialize_vector_db()
+
+    return {'out': 'Done' }
+
+
+@app.post("/initialize-doc-query-vec-db", tags=["Filters"])
+def initialize_doc_query_vec_db():
+    # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
+
+    # Lists the years present in goes database
+    basic_func.initialize_doc_query_vector()
+
+    return {'out': 'Done' }
+
+
+@app.post("/vector-encoding-smart-doc", tags=["Filters"])
+def vector_enc_smart_doc(user_doc_title : str):
+    # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
+
+    # Lists the years present in goes database
+    recommendation = basic_func.vector_encoding_smart_doc(user_doc_title)
+
+    return {'recommendation': recommendation }
+
+
+@app.post("/doc-query-smart-doc", tags=["Filters"])
+def doc_query_smart_doc(user_doc_title : str, username = 'user-test'):
+    # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
+
+    # Lists the years present in goes database
+    answer = basic_func.doc_query(user_doc_title, username)
+
+    return {'answer': answer }
+
+
+@app.post("/check-title-exists", tags=["Filters"])
+def check_title_exists(user_doc_title : str):
+    # get_current_user: base_model.User = Depends(get_current_user)) -> dict:
+
+    # Lists the years present in goes database
+    answer = basic_func.check_if_title_exists(user_doc_title)
+
+    return {'answer': answer }
