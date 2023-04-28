@@ -39,9 +39,6 @@ jobs:
           source ge_venv/bin/activate
           pip install great_expectations
           pip install boto3
-          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
-          Y | great_expectations docs build --site-name S3_site
-          python greatExpectations.py
+          python checkpoints/run_first_checkpoint.py
+
         
