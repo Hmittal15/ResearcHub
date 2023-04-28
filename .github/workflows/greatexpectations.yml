@@ -28,5 +28,6 @@ jobs:
           source ge_venv/bin/activate
           pip install great_expectations
           pip install boto3
+          Y | great_expectations docs build --site-name S3_site
           python greatExpectations.py
         
