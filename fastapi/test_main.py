@@ -4,7 +4,7 @@ from main import app
 client = TestClient(app)
 
 url = "/token"
-json_data = {"username": "aa", "password": "aa"}
+json_data = {"username": "admin", "password": "admin"}
 
 response = client.post(url, data=json_data, auth=("client_id", "client_secret"))     #login to get the access token
 ACCESS_TOKEN = response.json()["access_token"]    #capture test user's access token

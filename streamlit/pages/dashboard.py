@@ -24,7 +24,7 @@ else:
 
 
 
-    BASE_URL = "http://localhost:8090"
+    BASE_URL = "http://localhost/:8090"
 
     st.markdown("<h1 style='text-align: center;'>ANALYTICS</h1>", unsafe_allow_html=True)
     st.header("")

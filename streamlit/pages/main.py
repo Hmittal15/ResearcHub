@@ -17,12 +17,7 @@ if 'username' not in st.session_state:
 
 # st.session_state.encode_flag = 0
 
-st.markdown("<h1 style='text-align: center;'>ResearcHub</h1>", unsafe_allow_html=True)
-st.header("")
-
 BASE_URL = "http://localhost:8090"
-
-tab1, tab2 = st.tabs(["SEARCH BY TITLE", "SEARCH BY OTHER FIELDS"])
 
 if 'encode_flag' not in st.session_state:
     st.session_state.encode_flag=0
@@ -59,10 +54,10 @@ def main_page(my_token):
 
     tab1, tab2 = st.tabs(["SEARCH BY TITLE", "SEARCH BY FILTERS"])
 
-    doc_list_response = requests.get(BASE_URL + f'/list-filter?doc_type={st.session_state.doc_type}&subject={st.session_state.subject}&language={st.session_state.language}&sort={st.session_state.sort}&author_name={st.session_state.author_name}&keyword={st.session_state.keyword}', headers=headers).json()
+    doc_list_response = requests.post(BASE_URL + f'/list-filter?doc_type={st.session_state.doc_type}&subject={st.session_state.subject}&language={st.session_state.language}&sort={st.session_state.sort}&author_name={st.session_state.author_name}&keyword={st.session_state.keyword}', headers=headers).json()
     distinct_types = doc_list_response["filter_list"]["distinct_types"]
 
-    list_from_name_response = (requests.get(BASE_URL + f'/fetch-titles-from-name?doc_type={st.session_state.doc_type}&sort={st.session_state.sort}&partial_name={st.session_state.partial_name}')).json()
+    list_from_name_response = (requests.post(BASE_URL + f'/fetch-titles-from-name?doc_type={st.session_state.doc_type}&sort={st.session_state.sort}&partial_name={st.session_state.partial_name}', headers=headers)).json()
     list_from_name = list_from_name_response["filter_lists"]
 
     with tab1:
@@ -72,21 +67,21 @@ def main_page(my_token):
         col1, col2 = st.columns(2, gap="large")
 
         with col1:
-            title_doc_type = st.selectbox(
+            st.session_state.doc_type = st.selectbox(
                 'DOCUMENT TYPE:', distinct_types)
             
         with col2:
 
-            title_sort = st.selectbox(
+            st.session_state.sort = st.selectbox(
                 'SORT BY:', ['-', 'Oldest First', 'Latest First'])
 
         st.header("")
-        doc_name = st.text_input('DOCUMENT NAME :')
+        st.session_state.partial_name = st.text_input('DOCUMENT NAME :')
 
-    st.header("")
+        st.header("")
 
-    selected_doc = ''
-    selected_doc = st.selectbox("SELECT REQUIRED DOCUMENT ", list_from_name)
+        selected_doc = ''
+        selected_doc = st.selectbox("SELECT REQUIRED DOCUMENT ", list_from_name)
 
 
 

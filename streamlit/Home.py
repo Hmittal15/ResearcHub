@@ -29,7 +29,7 @@ if 'disable_logout' not in st.session_state:
 
 # define the Streamlit home page
 def homePage():
-    st.title("Welcome to NOAA dashboard!")
+    st.title("Welcome to Researchub!")
     st.subheader("Existing user? Please Log-in from the left pane.")
     st.subheader("New user? Please sign-up from the left pane.")
     
@@ -38,4 +38,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    st.text(st.session_state["access_token"])
+    # st.text(st.session_state["access_token"])
