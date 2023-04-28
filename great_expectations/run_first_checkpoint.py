@@ -25,7 +25,7 @@ from great_expectations.data_context import FileDataContext  # noqa: TCH001
 from great_expectations.util import get_context
 
 data_context: FileDataContext = get_context(
-    context_root_dir="../great_expectations"
+    context_root_dir="/great_expectations"
 )
 
 result: CheckpointResult = data_context.run_checkpoint(

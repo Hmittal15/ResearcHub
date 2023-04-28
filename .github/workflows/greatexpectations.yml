@@ -22,7 +22,7 @@ jobs:
           python-version: '3.10'
       - 
         name: great_expectations_run
-        working-directory: ./great_expectations
+        working-directory: ./
         env:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
           AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
@@ -39,6 +39,6 @@ jobs:
           source ge_venv/bin/activate
           pip install great_expectations
           pip install boto3
-          python run_first_checkpoint.py
+          python great_expectations/run_first_checkpoint.py
 
         
