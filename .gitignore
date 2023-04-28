@@ -148,3 +148,5 @@ documentation.docx
 Pipfile
 Final Project Proposal.pdf
 *.db
+
+*.DS_Store

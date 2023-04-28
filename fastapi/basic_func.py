@@ -1,5 +1,6 @@
 import hashlib
 import os
+import sqlite3
 import botocore
 import time
 import openai
@@ -27,7 +28,6 @@ import pinecone
 from sentence_transformers import SentenceTransformer
 from langchain.document_loaders import OnlinePDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import sqlite3
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -43,6 +43,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 2
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 load_dotenv()
 database_file_name = 'researchub.db'
@@ -51,9 +52,9 @@ final_df = 0
 
 #Establish connection to client
 s3client = boto3.client('s3', 
-                        region_name='us-east-1',
-                        aws_access_key_id=os.environ.get('AWS_ACCESS_KEY'),
-                        aws_secret_access_key=os.environ.get('AWS_SECRET_KEY')
+                        region_name = 'us-east-1',
+                        aws_access_key_id = os.environ.get('AWS_ACCESS_KEY'),
+                        aws_secret_access_key = os.environ.get('AWS_SECRET_KEY')
                         )
 
 
@@ -66,17 +67,17 @@ clientlogs = boto3.client('logs',
 
 
 
-# # Checks if the passed file exists in the specified bucket
-# def check_if_file_exists_in_s3_bucket(bucket_name, file_name):
-#     try:
-#         s3client.head_object(Bucket=bucket_name, Key=file_name)
-#         return True
+# Checks if the passed file exists in the specified bucket
+def check_if_file_exists_in_s3_bucket(bucket_name, file_name):
+    try:
+        s3client.head_object(Bucket=bucket_name, Key=file_name)
+        return True
 
-#     except botocore.exceptions.ClientError as e:
-#         if e.response['Error']['Code'] == '404':
-#             return False
-#         else:
-#             raise
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == '404':
+            return False
+        else:
+            raise
 
 
 #Generating logs with given message in cloudwatch
@@ -109,26 +110,23 @@ def copy_to_public_bucket(src_bucket_name, src_object_key, dest_bucket_name, des
 
 
 def get_users_data():
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
+    with engine.connect() as conn:
+        conn.execute('''select * from users''')
 
-    cursor = db.cursor()
-    cursor.execute('''select * from users''')
+        # Fetch all the rows as a list of tuples
+        rows = conn.fetchall()
 
-    # Fetch all the rows as a list of tuples
-    rows = cursor.fetchall()
-
-    # Convert the rows to a list of dictionaries
-    data = []
-    for row in rows:
-        # Create a dictionary with keys corresponding to the table column names
-        record = {
-            "username": row[0],
-            "full_name": row[1],
-            "email": row[2],
-            "password": row[3]
-        }
-        data.append(record)
+        # Convert the rows to a list of dictionaries
+        data = []
+        for row in rows:
+            # Create a dictionary with keys corresponding to the table column names
+            record = {
+                "username": row[0],
+                "full_name": row[1],
+                "email": row[2],
+                "password": row[3]
+            }
+            data.append(record)
     return data
 
 
@@ -190,47 +188,43 @@ async def get_current_active_user(current_user: base_model.User = Depends(get_cu
     return current_user
 
 
-def add_user(username, password, email, full_name, plan, role):
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
+async def add_user(username, password, email, full_name, plan):
 
-    cursor = db.cursor()
+    with engine.connect() as conn:
+
+        # Create a table to store user details
+        conn.execute('''CREATE TABLE IF NOT EXISTS users 
+                    (username TEXT PRIMARY KEY, 
+                    fullname TEXT, 
+                    password TEXT NOT NULL, 
+                    plan TEXT NOT NULL,
+                    call_count INTEGER)''')
     
-    # Hashing the password
-    password_hash = pwd_context.hash(password)
+        # Hashing the password
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
 
-    # call_count=0
+        if plan == 'free':
+            call_count = 10
+        elif plan == 'gold':
+            call_count = 15
+        elif plan == 'platinum':
+            call_count = 20
 
-    if "free" in plan:
-        call_count = 10
-    elif "gold" in plan:
-        call_count = 15
-    elif "platinum" in plan:
-        call_count = 20
+        # Inserting the details into users table
+        conn.execute("INSERT INTO users (username, fullname, password, email, plan, call_count) VALUES (?, ?, ?, ?, ?, ?)", 
+                (username, full_name, password_hash, email, plan, call_count))
+        
+        conn.commit()
 
-    # Inserting the details into users table
-    cursor.execute("INSERT INTO users (username, fullname, password, email, plan, call_count, role) VALUES (?, ?, ?, ?, ?, ?, ?)", 
-            (username, full_name, password_hash, email, plan, call_count, role))
-    
-    db.commit()
 
-    db.close()
-
-    s3client.upload_file(os.path.join(os.path.dirname(__file__), 'researchub.db'), 'researchub', 'researchub.db')
-
-    return(f"User {username} created successfully with name {full_name} and subscription tier {plan}.")
 
 # Define function to check if user already exists in database
 def check_user_exists(username):
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    
-    cursor = db.cursor()
 
-    cursor.execute("SELECT * FROM users WHERE username=?", (username,))
-    result = cursor.fetchone()
+    with engine.connect() as conn:
 
-    db.close()
+        conn.execute(text("SELECT * FROM users WHERE username=?", (username,)))
+        result = conn.fetchone()
 
     if bool(result):
         return False
@@ -321,6 +315,9 @@ def list_filters(doc_type, subject, language, sort, author_name, keyword):
         for table in tables:
             conn.execute(text(f"DROP TABLE IF EXISTS {table};"))
 
+    
+
+        
     return {"distinct_types" : distinct_types, "distinct_subjs" : distinct_subjs, "distinct_langs" : distinct_langs, "docs_list" : docs_list }
 
 
@@ -392,88 +389,99 @@ def get_endpoint_count_for_username(endpoint = 'any', username = 'admin', durati
     
 
 # Check whether user has calls
+def rate_limiting(username : str):
+    calls_made = get_endpoint_count_for_username(username=username, duration='hour')
+
+    # Get the plan's call count from users db
+    with engine.connect() as conn:
+        query = conn.execute(text(f'SELECT call_count FROM users where username = "{username}";'))
+        call_limit = [row[0] for row in query]
+
+
+    if calls_made < call_limit:
+        return True
+    else:
+        return False
+    
+
+# Check whether user has calls
 def download_document(selected_doc : str, username : str):
-    try:
-        with engine.connect() as conn:
-            query = conn.execute(text(f"SELECT DISTINCT DOC_URL FROM springer_metadata where TITLE = '{selected_doc}';"))
-            selected_url = [row[0] for row in query]
-        # print(selected_url)
+    with engine.connect() as conn:
+        query = conn.execute(text(f"SELECT DISTINCT DOC_URL FROM springer_metadata where TITLE = '{selected_doc}';"))
+        selected_url = [row[0] for row in query]
+    # print(selected_url)
 
-        response = requests.get(selected_url[0])
-        filename = f'{selected_doc}.pdf'
-        with open(filename, 'wb') as f:
-            f.write(response.content)
-        print (filename)
+    response = requests.get(selected_url[0])
+    filename = f'{selected_doc}.pdf'
+    with open(filename, 'wb') as f:
+        f.write(response.content)
+    print (filename)
 
-        # Upload the file to S3
+    # Upload the file to S3
 
-        bucket_name = 'researchub'
-        key = f'documents/{filename}'
-        s3client.upload_file(filename, bucket_name, key)
+    bucket_name = 'researchub'
+    key = f'documents/{filename}'
+    s3client.upload_file(filename, bucket_name, key)
 
-        # Delete the local file
-        os.remove(filename)
+    # Delete the local file
+    os.remove(filename)
 
-        # Generates the download URL of the specified file present in the given bucket and write logs in S3
-        
-        response = s3client.generate_presigned_url(
-            ClientMethod='get_object',
-            Params={
-                'Bucket': bucket_name,
-                'Key': key
-            },
-            ExpiresIn=3600        
-        )
+    # Generates the download URL of the specified file present in the given bucket and write logs in S3
+    
+    response = s3client.generate_presigned_url(
+        ClientMethod='get_object',
+        Params={
+            'Bucket': bucket_name,
+            'Key': key
+        },
+        ExpiresIn=3600        
+    )
 
-        # print(response)
+    # print(response)
 
-        write_logs_researchub(f'Requested download link for {selected_doc}', 'download-url', username)
+    write_logs_researchub(f'Requested download link for {selected_doc}', 'download-url', username)
 
-        return response
-    except:
-        return "fail"
+    return response
     
 
 def generate_summary(user_doc_title, username):
-    try:
-        # user_doc_title = f'documents/{user_doc_title}.pdf'
-        user_bucket = os.environ.get('USER_BUCKET_NAME')
-        db_name="researchub.db"
-        table_name="springer_metadata"
+    # user_doc_title = f'documents/{user_doc_title}.pdf'
+    user_bucket = os.environ.get('USER_BUCKET_NAME')
+    db_name="researchub.db"
+    table_name="springer_metadata"
 
-        s3client.download_file(user_bucket, db_name, db_name)
-        df = pd.read_sql_table(table_name, con=engine)
+    s3client.download_file(user_bucket, db_name, db_name)
+    df = pd.read_sql_table(table_name, con=engine)
 
-        for index, row in df.iterrows():
-            # print(row['url'])
-            if (row['TITLE'] == user_doc_title):
-                loader = OnlinePDFLoader(row['DOC_URL'])
+    for index, row in df.iterrows():
+        # print(row['url'])
+        if (row['TITLE'] == user_doc_title):
+            loader = OnlinePDFLoader(row['DOC_URL'])
 
-                data = loader.load()
+            data = loader.load()
 
-                # print (f'We have {len(data)} document(s) in our data')
-                # print (f'There are {len(data[0].page_content)} characters in our document')
+            # print (f'We have {len(data)} document(s) in our data')
+            # print (f'There are {len(data[0].page_content)} characters in our document')
 
-                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=20)
-                texts = text_splitter.split_documents(data)
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=20)
+            texts = text_splitter.split_documents(data)
 
-                # restricting passing of long data to summarization model
-                # limiting ot only first 25k characters
-                if (len(texts)>25):
-                    texts=texts[:25]
+            # restricting passing of long data to summarization model
+            # limiting ot only first 25k characters
+            if (len(texts)>25):
+                texts=texts[:25]
 
-                # print (f'Now we have {len(texts)} documents')
+            # print (f'Now we have {len(texts)} documents')
 
-                llm = OpenAI(model_name="text-davinci-003", openai_api_key=os.getenv("OPENAI_ACCESS_KEY"))
+            llm = OpenAI(model_name="text-davinci-003", openai_api_key=os.getenv("OPENAI_ACCESS_KEY"))
 
-                chain = load_summarize_chain(llm, chain_type="map_reduce")
-                summary = chain.run(texts)
-        
-        write_logs_researchub(f'Requested the summary of the document "{user_doc_title}"', 'summary-generation', username)
+            chain = load_summarize_chain(llm, chain_type="map_reduce")
+            summary = chain.run(texts)
+    
+    write_logs_researchub(f'Requested the summary of the document "{user_doc_title}"', 'summary-generation', username)
 
-        return(summary)
-    except:
-        return "fail"
+    return(summary)
+
 
 
 def add_text_images(text_list, my_size, my_font, my_page, is_last_record, pdf):
@@ -726,20 +734,14 @@ def generate_translation(filename, username, translate_to):
         )
 
         write_logs_researchub(f'Requested translation for the document {filename}', 'translation-generation', username)
+
         return response
     
-    except:
-        # Delete the images directory and all its contents
-        if os.path.exists("images"):
-            for filename in os.listdir("images"):
-                file_path = os.path.join("images", filename)
-                if os.path.isfile(file_path) or os.path.islink(file_path):
-                    os.unlink(file_path)
-                elif os.path.isdir(file_path):
-                    os.rmdir(file_path)
 
-            os.rmdir("images")
-        return "fail"
+    except:
+        return "False"
+
+    
 
 
 # One-time process to create an index initially
@@ -754,56 +756,59 @@ def initialize_vector_db():
     pinecone.create_index(index_name, dimension=384, metric="cosine", pods=1, pod_type="p1.x1")
 
 
+
 def generate_recommendation(user_doc_title, username):
-    try:
-        user_bucket = os.environ.get('USER_BUCKET_NAME')
 
-        # user_doc_title="Tactile perception of textile fabrics based on friction and brain activation"
-        user_doc_abstract=''
-        user_doc_keywords=''
-        table_name="springer_metadata"
-        db_name="researchub.db"
+    user_bucket = os.environ.get('USER_BUCKET_NAME')
 
-        s3client.download_file(user_bucket, db_name, db_name)
-        user_df = pd.read_sql_table(table_name, con=engine)
-        for i, row in user_df.iterrows():
-            if (row['TITLE']==user_doc_title):
-                # user_doc_summary = row['SUMMARY']
-                user_doc_abstract = row['ABSTRACT']
-                user_doc_keywords = row['KEYWORDS']
-                user_doc_url = row['DOC_URL']
+    # user_doc_title="Tactile perception of textile fabrics based on friction and brain activation"
+    user_doc_abstract=''
+    user_doc_keywords=''
+    table_name="springer_metadata"
+    db_name="researchub.db"
 
-        df=pd.DataFrame(columns=['Document title', 'Match percentage'])
-        titles=[]
-        percentage=[]
+    s3client.download_file(user_bucket, db_name, db_name)
+    user_df = pd.read_sql_table(table_name, con=engine)
+    for i, row in user_df.iterrows():
+        if (row['TITLE']==user_doc_title):
+            # user_doc_summary = row['SUMMARY']
+            user_doc_abstract = row['ABSTRACT']
+            user_doc_keywords = row['KEYWORDS']
+            user_doc_url = row['DOC_URL']
 
-        model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
+    df=pd.DataFrame(columns=['Document title', 'Match percentage'])
+    titles=[]
+    percentage=[]
 
-        pinecone.init(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENV'))
-        index_name="doc-recommend"
-        index = pinecone.Index(index_name)
+    model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
-        loader = OnlinePDFLoader(user_doc_url)
-        data = loader.load()
+    pinecone.init(api_key=os.getenv('PINECONE_API_KEY'), environment=os.getenv('PINECONE_ENV'))
+    index_name="doc-recommend"
+    index = pinecone.Index(index_name)
 
-        xq = model.encode(str(data) + "Following is the abstract for this document. " + user_doc_abstract + "Following are the crucial keywords which are described in this document. " + user_doc_keywords).tolist()
-        result = index.query(xq, top_k=6, include_metadata=True)
+    loader = OnlinePDFLoader(user_doc_url)
+    data = loader.load()
 
-        for i in range(len(result['matches'])):
-            if (user_doc_title != result['matches'][i]['metadata']['title']):
-                titles.append(result['matches'][i]['metadata']['title'])
-                percentage.append(int(result['matches'][i]['score'] * 100))
+    xq = model.encode(str(data) + "Following is the abstract for this document. " + user_doc_abstract + "Following are the crucial keywords which are described in this document. " + user_doc_keywords).tolist()
+    result = index.query(xq, top_k=6, include_metadata=True)
 
-        
-        df['Document title']=titles
-        df['Match percentage']=percentage
+    for i in range(len(result['matches'])):
+        if (user_doc_title != result['matches'][i]['metadata']['title']):
+            titles.append(result['matches'][i]['metadata']['title'])
+            percentage.append(int(result['matches'][i]['score'] * 100))
+
+    
+    df['Document title']=titles
+    df['Match percentage']=percentage
 
 
-        write_logs_researchub(f'Requested recommendations for the document "{user_doc_title}"', 'recommendation-generation', username)
+    write_logs_researchub(f'Requested recommendations for the document "{user_doc_title}"', 'recommendation-generation', username)
 
-        return df.to_dict()
-    except:
-        return "fail"
+
+
+    return df.to_dict()
+    # return ("Hello there")
+
 
 # One-time process to create an index initially
 def initialize_doc_query_vector():
@@ -861,32 +866,30 @@ def vector_encoding_smart_doc(user_doc_title):
     
 
 def doc_query(query, username):
-    try:
-        openai.api_key = os.environ.get("OPENAI_ACCESS_KEY")
+    openai.api_key = os.environ.get("OPENAI_ACCESS_KEY")
 
-        model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
+    model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
-        pinecone.init(api_key=os.getenv('PINECONE_API_KEY_DOC'), environment=os.getenv('PINECONE_ENV_DOC'))
-        index_name="doc-query"
-        index = pinecone.Index(index_name)
+    pinecone.init(api_key=os.getenv('PINECONE_API_KEY_DOC'), environment=os.getenv('PINECONE_ENV_DOC'))
+    index_name="doc-query"
+    index = pinecone.Index(index_name)
 
-        query_doc = model.encode(query).tolist()
-        result = index.query(query_doc, top_k=1, include_metadata=True)
+    query_doc = model.encode(query).tolist()
+    result = index.query(query_doc, top_k=1, include_metadata=True)
 
-        print(result)
-        print(query)
+    print(result)
+    print(query)
 
-        completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": "As a professor, answer below question using the provided context only. If information is insufficient, respond saying Information not available in the document. Context: " + result['matches'][0]['metadata']['context'] + '\n\n' + "Question: " + query}
-            ]
-        )
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": "As a professor, answer below question using the provided context only. If information is insufficient, respond saying Information not available in the document. Context: " + result['matches'][0]['metadata']['context'] + '\n\n' + "Question: " + query}
+        ]
+    )
 
-        write_logs_researchub(f'Queried using smart-doc. Query : {query}', 'doc-query-smart-doc', username)
-        return (completion.choices[0].message["content"])
-    except:
-        return "fail"
+    write_logs_researchub(f'Queried using smart-doc. Query : {query}', 'doc-query-smart-doc', username)
+    return (completion.choices[0].message["content"])
+
 
 def check_if_title_exists(smart_doc_name):
 
@@ -898,175 +901,57 @@ def check_if_title_exists(smart_doc_name):
         return True
     else:
         return False
-
-def check_users_api_record(userid: str):
-
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
     
-    cursor = db.cursor()
-    
-    select_q_users = f'select plan from users where username="{userid}"'
-    cursor.execute(select_q_users)
-    result_plan = cursor.fetchone()
 
-    user_plan = ""
-    max_limit = 0
-    if ("free" in result_plan):
-        user_plan="free"
-        max_limit=10
-    if ("gold" in result_plan):
-        user_plan="gold"
-        max_limit=15
-    if ("platinum" in result_plan):
-        user_plan="platinum"
-        max_limit=20
-    
-    select_q = f'select * from users_api_record where username="{userid}"'
-    cursor.execute(select_q)
-    result = cursor.fetchall()
+def fetch_titles_from_name(doc_type, sort, partial_name):
+    # create a connection and a transaction
+    with engine.connect() as conn:
+        create_table = text('CREATE TEMPORARY TABLE temp_type AS SELECT * FROM springer_metadata;')
+        conn.execute(create_table)
         
-    if (result!=[]):
-        update_q_user_total_count = f'UPDATE users_api_record SET max_count = {max_limit}, plan = "{user_plan}" WHERE username="{userid}"'
-        cursor.execute(update_q_user_total_count)
-        cursor.execute(select_q)
-        updated_result = cursor.fetchall()
+        select_table = text('SELECT DISTINCT TYPE FROM temp_type;')
+        distinct_types = [row[0] for row in conn.execute(select_table)]
 
-        now = datetime.now()
-        now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-        timedelta = now - datetime.strptime(result[0][1], '%Y-%m-%d %H:%M:%S')
+        hyphen = "-"
 
-        if ((updated_result[0][4] >= updated_result[0][3]) and (timedelta.total_seconds() < 60 * 60)):
-            return False
-    
-    db.commit()
-    db.close()
+        if hyphen not in distinct_types:
+            distinct_types.insert(0, hyphen)
 
-    s3client.upload_file(os.path.join(os.path.dirname(__file__), 'researchub.db'), 'researchub', 'researchub.db')
+        if(partial_name == ""):
+            conn.execute(text('CREATE TEMPORARY TABLE temp_names AS SELECT * FROM temp_type;'))
 
-    return True
-
-
-def update_users_api_record(endpoint: str, response_status: str, userid: str):
-
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    
-    cursor = db.cursor()
-    
-    now = datetime.now()
-    now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-    
-    update_col = ""
-    if ("/download-url" in endpoint):
-        update_col = "doc_download"
-    elif ("/summary-generation" in endpoint):
-        update_col = "summary_generation"
-    elif ("/translation-generation" in endpoint):
-        update_col = "translation_generation"
-    elif ("/recommendation-generation" in endpoint):
-        update_col = "recommendation_generation"
-    elif ("/doc-query-smart-doc" in endpoint):
-        update_col = "smart_doc"
-    
-    select_q_users = f'select plan from users where username="{userid}"'
-    cursor.execute(select_q_users)
-    result_plan = cursor.fetchone()
-
-    user_plan = ""
-    max_limit = 0
-    if ("free" in result_plan):
-        user_plan="free"
-        max_limit=10
-    if ("gold" in result_plan):
-        user_plan="gold"
-        max_limit=15
-    if ("platinum" in result_plan):
-        user_plan="platinum"
-        max_limit=20
-    
-    if ("fail" in response_status):
-        update_q = f'UPDATE users_api_record SET {update_col} = ((select {update_col} from users_api_record where username="{userid}") + 1), failure = ((select failure from users_api_record where username="{userid}") + 1) WHERE username="{userid}"'
-    else:
-        update_q = f'UPDATE users_api_record SET {update_col} = ((select {update_col} from users_api_record where username="{userid}") + 1), success = ((select success from users_api_record where username="{userid}") + 1) WHERE username="{userid}"'
-        
-    select_q = f'select * from users_api_record where username="{userid}"'
-    insert_q_user_api = f'insert into users_api_record (username, first_call, plan, max_count, total_count, doc_download, summary_generation, translation_generation, recommendation_generation, smart_doc, success, failure) values ("{userid}", "{now_str}", "{user_plan}", {max_limit}, 1, 0, 0, 0, 0, 0, 0, 0)'
-    update_q_user_total_count = f'UPDATE users_api_record SET total_count = ((select total_count from users_api_record where username="{userid}") + 1) WHERE username="{userid}"'
-    delete_q_user_api = f'delete from users_api_record where username = "{userid}"'
-    
-    cursor.execute(select_q)
-    result = cursor.fetchall()
-    
-    if result!=[]:
-        timedelta = now - datetime.strptime(result[0][1], '%Y-%m-%d %H:%M:%S')
-        insert_q_app_api = f'insert into app_api_record (username, first_call, plan, max_count, total_count, doc_download, summary_generation, translation_generation, recommendation_generation, smart_doc, success, failure) values {result[0]}'
-    
-    if result==[]:
-        cursor.execute(insert_q_user_api)
-        cursor.execute(update_q)
-
-    elif ((result!=[]) and (timedelta.total_seconds() < 60 * 60)):
-        if (result[0][4] < result[0][3]):
-            cursor.execute(update_q)
-            cursor.execute(update_q_user_total_count)
         else:
-            return False
+            conn.execute(text(f'CREATE TEMPORARY TABLE temp_names AS SELECT * FROM temp_type WHERE TITLE LIKE "%{partial_name}%";'))
+
+        query = conn.execute(text('SELECT TITLE FROM temp_names;'))
+
+        docs_list = [row[0] for row in query]
+
+        if 'Oldest First' in sort :
+            query = conn.execute(text('SELECT TITLE FROM temp_names ORDER BY DATE;'))
+            docs_list = [row[0] for row in query]
+        elif 'Latest First' in sort:
+            query = conn.execute(text('SELECT TITLE FROM temp_names ORDER BY DATE DESC;'))
+            docs_list = [row[0] for row in query]
+
+        # conn.execute(text('DROP TABLE temp_docs, temp_keyword, temp_auth, temp_lang, temp_subj, temp_type;'))
+        tables = ['temp_type', 'temp_names']
+
+        for table in tables:
+            conn.execute(text(f"DROP TABLE IF EXISTS {table};"))
+
+    return docs_list
     
-    elif ((result!=[]) and (timedelta.total_seconds() >= 60 * 60)):
-        cursor.execute(insert_q_app_api)
-        cursor.execute(delete_q_user_api)
-        cursor.execute(insert_q_user_api)
-        cursor.execute(update_q)
-        
-    
-    db.commit()
-    db.close()
-   
-    s3client.upload_file(os.path.join(os.path.dirname(__file__), 'researchub.db'), 'researchub', 'researchub.db')
-    
-    return True
 
-# Define function to update password in database
-def update_password(username, password):
-
-    # Hashing the password
-    password_hash = pwd_context.hash(password)
-
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    c = db.cursor()
-
-    c.execute("UPDATE users SET password=? WHERE username=?", (password_hash, username))
-
-    db.commit()
-
-    db.close()
-
-    s3client.upload_file(os.path.join(os.path.dirname(__file__), 'researchub.db'), 'researchub', 'researchub.db')
+def fetch_dataframe():
+    conn = sqlite3.connect('researchub.db')
 
 
-# Define function to update password in database
-def update_plan(username, new_plan):
+    table_name = 'users'
+    # query = f'SELECT * FROM {table_name}'
+    df = pd.read_sql('SELECT * FROM users', conn)
 
-    # Connect to database
-    s3client.download_file('researchub', 'researchub.db', os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    db = sqlite3.connect(os.path.join(os.path.dirname(__file__), 'researchub.db'))
-    c = db.cursor()
+    conn.commit()
+    conn.close()
 
-    if "free" in new_plan:
-        call_count = 10
-    elif "gold" in new_plan:
-        call_count = 15
-    elif "platinum" in new_plan:
-        call_count = 20
-
-    c.execute("UPDATE users SET plan=?, call_count=? WHERE username=?", (new_plan, call_count, username))
-
-    db.commit()
-
-    db.close()
-
-    s3client.upload_file(os.path.join(os.path.dirname(__file__), 'researchub.db'), 'researchub', 'researchub.db')
+    return df.to_dict()
