@@ -150,3 +150,6 @@ recommend.py
 requirements.txt
 summary.py
 translate.py
+
+
+*.DS_Store

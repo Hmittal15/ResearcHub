@@ -6,7 +6,7 @@ if 'access_token' not in st.session_state:
     st.session_state.access_token = ''
 
 def edit_page(my_token):
-    BASE_URL = 'http://localhost:8090'
+    BASE_URL = 'http://34.75.99.189:8090'
 
     tab1, tab2 = st.tabs(["Forgot Password", "Change Plan"])
 

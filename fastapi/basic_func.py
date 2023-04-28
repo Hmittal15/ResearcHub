@@ -1070,3 +1070,58 @@ def update_plan(username, new_plan):
     db.close()
 
     s3client.upload_file(os.path.join(os.path.dirname(__file__), 'researchub.db'), 'researchub', 'researchub.db')
+
+
+
+def fetch_titles_from_name(doc_type, sort, partial_name):
+    # create a connection and a transaction
+    with engine.connect() as conn:
+        create_table = text('CREATE TEMPORARY TABLE temp_type AS SELECT * FROM springer_metadata;')
+        conn.execute(create_table)
+        
+        select_table = text('SELECT DISTINCT TYPE FROM temp_type;')
+        distinct_types = [row[0] for row in conn.execute(select_table)]
+
+        hyphen = "-"
+
+        if hyphen not in distinct_types:
+            distinct_types.insert(0, hyphen)
+
+        if(partial_name == ""):
+            conn.execute(text('CREATE TEMPORARY TABLE temp_names AS SELECT * FROM temp_type;'))
+
+        else:
+            conn.execute(text(f'CREATE TEMPORARY TABLE temp_names AS SELECT * FROM temp_type WHERE TITLE LIKE "%{partial_name}%";'))
+
+        query = conn.execute(text('SELECT TITLE FROM temp_names;'))
+
+        docs_list = [row[0] for row in query]
+
+        if 'Oldest First' in sort :
+            query = conn.execute(text('SELECT TITLE FROM temp_names ORDER BY DATE;'))
+            docs_list = [row[0] for row in query]
+        elif 'Latest First' in sort:
+            query = conn.execute(text('SELECT TITLE FROM temp_names ORDER BY DATE DESC;'))
+            docs_list = [row[0] for row in query]
+
+        # conn.execute(text('DROP TABLE temp_docs, temp_keyword, temp_auth, temp_lang, temp_subj, temp_type;'))
+        tables = ['temp_type', 'temp_names']
+
+        for table in tables:
+            conn.execute(text(f"DROP TABLE IF EXISTS {table};"))
+
+    return docs_list
+    
+
+def fetch_dataframe():
+    conn = sqlite3.connect('researchub.db')
+
+    # query = f'SELECT * FROM {table_name}'
+    df_users = pd.read_sql('SELECT * FROM users', conn)
+    df_app_api_record = pd.read_sql('SELECT * FROM app_api_record', conn)
+    df_users_api_record = pd.read_sql('SELECT * FROM users_api_record', conn)
+
+    conn.commit()
+    conn.close()
+
+    return {'df_users' : df_users.to_dict() , 'df_app_api_record' : df_app_api_record.to_dict(), 'df_users_api_record' : df_users_api_record.to_dict()}

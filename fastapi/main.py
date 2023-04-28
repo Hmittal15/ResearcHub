@@ -19,6 +19,27 @@ from fastapi.responses import StreamingResponse
 
 from basic_func import get_current_user
 
+
+
+# # Connect to the database
+# conn = sqlite3.connect('researchub.db')
+# c = conn.cursor()
+
+# # Define the data for the new row
+# new_row_data = ('admin', 'admin', 'admin', 'admin', 'admin', 10000, 'admin')
+
+# # Use an SQL INSERT statement to add the row
+# c.execute('INSERT INTO users (fullname, email, username, password, plan, call_count, role) VALUES (?, ?, ?, ?, ?, ?, ?)', new_row_data)
+
+# # Commit the changes to the database
+# conn.commit()
+
+# # Close the connection
+# conn.close()
+
+
+
+
 app =FastAPI()
 
 load_dotenv()
@@ -29,7 +50,7 @@ s3client = boto3.client('s3',
                         aws_secret_access_key = os.environ.get('AWS_SECRET_KEY')
                         )
 
-@app.post("/token", status_code=200, tags=["Authenticate"])
+@app.post("/token", status_code=200, tags=["User Details"])
 async def login_for_access_token(request: OAuth2PasswordRequestForm = Depends()):
     all_data=basic_func.get_users_data()
     for i in range(len(all_data)):
@@ -53,12 +74,12 @@ async def login_for_access_token(request: OAuth2PasswordRequestForm = Depends())
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@app.get("/users/me/", response_model=base_model.User, tags=["Authenticate"])
+@app.get("/users/me/", response_model=base_model.User, tags=["User Details"])
 async def read_users_me(current_user: base_model.User = Depends(basic_func.get_current_active_user)):
     return current_user
 
 
-@app.post("/add-user", tags=["CLI"])
+@app.post("/add-user", tags=["User Details"])
 async def add_user(username: str, password: str, email: str, full_name: str, plan: str, role: str) -> dict:
 
     basic_func.add_user(username, password, email, full_name, plan, role)
@@ -66,7 +87,7 @@ async def add_user(username: str, password: str, email: str, full_name: str, pla
     return {"user" : "User added"}
 
 
-@app.post("/check-user-exists", tags=["CLI"])
+@app.post("/check-user-exists", tags=["User Details"])
 async def check_user_exists(username: str) -> dict:
 
     status = basic_func.check_user_exists(username)
@@ -74,7 +95,7 @@ async def check_user_exists(username: str) -> dict:
     return {"user" : status}
 
 
-@app.get("/list-filter", tags=["Filters"])
+@app.post("/list-filter", tags=["Filters"])
 def list_filter(doc_type, subject, language, sort, author_name, keyword,
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -92,7 +113,7 @@ def list_filter(doc_type, subject, language, sort, author_name, keyword,
 #     return {'endpoint_calls_count': endpoint_calls_count }
 
 
-@app.post("/download-url", tags=["Filters"])
+@app.post("/download-url", tags=["Download URL"])
 def list_document(selected_doc : str, username = 'user-test',
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -102,7 +123,7 @@ def list_document(selected_doc : str, username = 'user-test',
     return {'download_link': download_link }
 
 
-@app.post("/summary-generation", tags=["Filters"])
+@app.post("/summary-generation", tags=["Functionalities"])
 def summary_generation(user_doc_title : str, username = 'user-test',
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -112,7 +133,7 @@ def summary_generation(user_doc_title : str, username = 'user-test',
     return {'summary': summary }
 
 
-@app.post("/translation-generation", tags=["Filters"])
+@app.post("/translation-generation", tags=["Functionalities"])
 def translation_generation(filename : str, username : str, translate_to : str,
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -122,7 +143,7 @@ def translation_generation(filename : str, username : str, translate_to : str,
     return {'translation': translation }
 
 
-@app.post("/recommendation-generation", tags=["Filters"])
+@app.post("/recommendation-generation", tags=["Functionalities"])
 def recommendation_generation(user_doc_title : str, username = 'user-test',
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -132,7 +153,7 @@ def recommendation_generation(user_doc_title : str, username = 'user-test',
     return {'recommendation': recommendation }
 
 
-@app.post("/initialize-vec-db", tags=["Filters"])
+@app.post("/initialize-vec-db", tags=["Functionalities"])
 def initialize_vec_db(get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
     # Lists the years present in goes database
@@ -141,7 +162,7 @@ def initialize_vec_db(get_current_user: base_model.User = Depends(get_current_us
     return {'out': 'Done' }
 
 
-@app.post("/initialize-doc-query-vec-db", tags=["Filters"])
+@app.post("/initialize-doc-query-vec-db", tags=["Functionalities"])
 def initialize_doc_query_vec_db(get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
     # Lists the years present in goes database
@@ -150,7 +171,7 @@ def initialize_doc_query_vec_db(get_current_user: base_model.User = Depends(get_
     return {'out': 'Done' }
 
 
-@app.post("/vector-encoding-smart-doc", tags=["Filters"])
+@app.post("/vector-encoding-smart-doc", tags=["Functionalities"])
 def vector_enc_smart_doc(user_doc_title : str,
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -160,7 +181,7 @@ def vector_enc_smart_doc(user_doc_title : str,
     return {'recommendation': recommendation }
 
 
-@app.post("/doc-query-smart-doc", tags=["Filters"])
+@app.post("/doc-query-smart-doc", tags=["Functionalities"])
 def doc_query_smart_doc(user_doc_title : str, username = 'user-test',
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
@@ -179,15 +200,24 @@ def check_title_exists(user_doc_title : str,
 
     return {'answer': answer }
 
-@app.post("/check-users-api-record", tags=["CLI"])
+@app.post("/check-users-api-record", tags=["User Details"])
 async def check_users_api_record(username: str) -> dict:
 
     status = basic_func.check_users_api_record(username)
 
     return {"user" : status}
 
+@app.post("/fetch-titles-from-name", tags=["Filters"])
+def fetch_title_name(doc_type, sort, partial_name,
+    get_current_user: base_model.User = Depends(get_current_user)) -> dict:
 
-@app.post("/update-users-api-record", tags=["CLI"])
+    # Lists the years present in goes database
+    filter_lists = basic_func.fetch_titles_from_name(doc_type, sort, partial_name)
+
+    return {'filter_lists': filter_lists }
+    
+
+@app.post("/update-users-api-record", tags=["User Details"])
 def update_users_api_record(url: str, response: str, username: str) -> dict:
 
     status = basic_func.update_users_api_record(url, response, username)
@@ -195,7 +225,7 @@ def update_users_api_record(url: str, response: str, username: str) -> dict:
     return {"user" : status}
 
 
-@app.post("/update-password", tags=["CLI"])
+@app.post("/update-password", tags=["User Details"])
 def update_password(username: str, password: str) -> dict:
 
     basic_func.update_password(username, password)
@@ -203,7 +233,7 @@ def update_password(username: str, password: str) -> dict:
     return {"user" : 'status'}
 
 
-@app.post("/update-plan", tags=["CLI"])
+@app.post("/update-plan", tags=["User Details"])
 def update_plan(username: str, new_plan: str) -> dict:
 
     basic_func.update_plan(username, new_plan)
@@ -211,7 +241,7 @@ def update_plan(username: str, new_plan: str) -> dict:
     return {"user" : 'status'}
 
 
-@app.post("/app-api-record", tags=["CLI"])
+@app.post("/app-api-record", tags=["User Details"])
 def app_api_record():
 
     bucket_name = "researchub"
@@ -246,7 +276,7 @@ def app_api_record():
     return StreamingResponse(csv_bytes, media_type='text/csv')
 
 
-@app.post("/user-api-record", tags=["CLI"])
+@app.post("/user-api-record", tags=["User Details"])
 async def user_api_record() -> dict:
 
 
@@ -280,3 +310,12 @@ async def user_api_record() -> dict:
     # Use the StreamingResponse class to send the file-like object
     # as a streaming response
     return StreamingResponse(csv_bytes, media_type='text/csv')
+
+@app.get("/fetch-dataframe", tags=["Dashboard"])
+def fetch_dataframes(
+    get_current_user: base_model.User = Depends(get_current_user)) -> dict:
+
+    # Lists the years present in goes database
+    dataframe = basic_func.fetch_dataframe()
+
+    return {'dataframe': dataframe }
