@@ -39,6 +39,6 @@ jobs:
           source ge_venv/bin/activate
           pip install great_expectations
           pip install boto3
-          python checkpoints/run_first_checkpoint.py
+          python run_first_checkpoint.py
 
         
