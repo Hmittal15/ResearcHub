@@ -22,8 +22,9 @@ jobs:
           python-version: '3.10'
       - 
         name: Install pipenv
-        run: pip install pipenv
+        working-directory: ./great_expectations
         run: |
+          pip install pipenv
           pipenv install great_expectations
           pipenv install boto3
           python greatExpectations.py
