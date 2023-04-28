@@ -11,7 +11,7 @@ WORKDIR /app
 COPY Home.py requirements.txt ./
 # Copy main.py as source cod and req.txt as dependency
 
-RUN pip install -r req.txt
+RUN pip install -r requirements.txt
 # Install the dependency
 
 RUN pip install streamlit --upgrade

@@ -2,10 +2,13 @@
 import streamlit as st
 import requests
 
+if 'access_token' not in st.session_state:
+    st.session_state.access_token = ''
+
 def signup():
     user_bucket_name = 'researchub'
     subscription_tiers = ['free', 'gold', 'platinum']
-    BASE_URL = 'http://localhost:8090'
+    BASE_URL = 'http://34.75.99.189:8090'
 
     # Streamlit app
     st.title('Sign-up Page')
