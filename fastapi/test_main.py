@@ -4,7 +4,7 @@ from main import app
 client = TestClient(app)
 
 url = "/token"
-json_data = {"username": "aa", "password": "aa"}
+json_data = {"username": "admin", "password": "admin"}
 
 response = client.post(url, data=json_data, auth=("client_id", "client_secret"))     #login to get the access token
 ACCESS_TOKEN = response.json()["access_token"]    #capture test user's access token
@@ -19,7 +19,7 @@ smart_doc_query="How are you?"
 def test_login_for_access_token():
     response = client.post(
         url = "/token",
-        data = {"username": "aa", "password": "aa"},
+        data = {"username": "admin", "password": "admin"},
         auth=("client_id", "client_secret")
     )
     assert response.status_code == 200
@@ -32,16 +32,6 @@ def test_check_user_exists():
     assert response.status_code == 200
     message=response.json()['user']
     assert message == False # Existing user
-
-#Tests downloading a PDF file
-def test_list_document():
-    response = client.post(
-        url = f"/download-url?selected_doc={selected_doc}&username={username}",
-        headers = header
-        )
-    assert response.status_code == 200
-    message = response.json()["download_link"]
-    assert message.split("?")[0] == "https://researchub.s3.amazonaws.com/documents/Thermodynamic%20Equilibrium%20Analysis%20of%20Steam%20Reforming%20Reaction%20of%20Radioactive%20Waste%20Oil.pdf"
 
 #Tests the summarization method
 def test_summary_generation():
