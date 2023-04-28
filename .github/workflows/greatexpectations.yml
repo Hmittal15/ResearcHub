@@ -25,7 +25,7 @@ jobs:
         run: pip install pipenv
 
 
-        name: Run great_expectations
+        name: Run ge
         working-directory: ./great_expectations
         env:
           AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
