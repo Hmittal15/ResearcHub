@@ -14,6 +14,18 @@ if 'access_token' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state.username = ''
 
+if 'password' not in st.session_state:
+    st.session_state.password = ''
+
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+
+if 'disable_login' not in st.session_state:
+    st.session_state.disable_login = False
+
+if 'disable_logout' not in st.session_state:
+    st.session_state.disable_logout = True
+
 username = st.session_state.username
 
 if "access_token" not in st.session_state or st.session_state['access_token']=='':
