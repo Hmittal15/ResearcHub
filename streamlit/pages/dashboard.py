@@ -4,9 +4,7 @@ import sqlite3
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
-
-
-
+from pages.Login import my_token
 
 if 'access_token' not in st.session_state:
     st.session_state.access_token = ''
@@ -26,22 +24,14 @@ if 'disable_login' not in st.session_state:
 if 'disable_logout' not in st.session_state:
     st.session_state.disable_logout = True
 
-username = st.session_state.username
-
-if "access_token" not in st.session_state or st.session_state['access_token']=='':
-    st.title("Please sign-in to access this feature!")
-else:
-
-
-
-
-
-    BASE_URL = "http://34.75.99.189/:8090"
+def dashboard_page(my_token):
+    headers = {"Authorization": f"Bearer {my_token}"}
+    BASE_URL = "http://fastapi:8090"
 
     st.markdown("<h1 style='text-align: center;'>ANALYTICS</h1>", unsafe_allow_html=True)
     st.header("")
 
-    dataframe_response = (requests.get(BASE_URL + f'/fetch-dataframe')).json()
+    dataframe_response = (requests.get(BASE_URL + f'/fetch-dataframe', headers=headers)).json()
     df_users = dataframe_response["dataframe"]["df_users"] 
     df_users = pd.DataFrame.from_dict(df_users, orient='columns')
 
@@ -55,7 +45,7 @@ else:
     df_combined = pd.concat([df_app_api_record, df_users_api_record],  ignore_index=True)
 
 
-
+    username = st.session_state.username
     if(username!='admin'):
 
         st.header("")
@@ -88,10 +78,6 @@ else:
         st.plotly_chart(fig)
 
         st.header("")
-
-
-
-
 
         st.header("")
 
@@ -506,3 +492,7 @@ else:
             st.plotly_chart(fig)
 
 
+if "access_token" not in st.session_state or st.session_state['access_token']=='':
+    st.title("Please sign-in to access this feature!")
+else:
+    dashboard_page(my_token)

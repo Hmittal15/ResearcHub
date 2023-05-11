@@ -105,14 +105,6 @@ def list_filter(doc_type, subject, language, sort, author_name, keyword,
     return {'filter_list': filter_list }
 
 
-# @app.post("/endpoint-calls", tags=["Filters"])
-# def endpoint_calls(endpoint = 'any', username = 'admin', duration = 'none'):
-
-#     endpoint_calls_count = basic_func.get_endpoint_count_for_username(endpoint, username, duration)
-    
-#     return {'endpoint_calls_count': endpoint_calls_count }
-
-
 @app.post("/download-url", tags=["Download URL"])
 def list_document(selected_doc : str, username = 'user-test',
                        get_current_user: base_model.User = Depends(get_current_user)) -> dict:

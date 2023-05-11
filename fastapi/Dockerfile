@@ -9,12 +9,12 @@ WORKDIR /app
 # Change the working dir inside the container - cd /app
 
 COPY main.py requirements.txt ./
-# Copy main.py as source cod and req.txt as dependency
+# Copy main.py as source code and req.txt as dependency
 
 RUN pip install -r requirements.txt
 # Install the dependency
 
-ADD base_model.py basic_func.py researchub.db test_main.py /app/
+ADD base_model.py basic_func.py test_main.py /app/
 
 ### Container Env same as local at this point
 

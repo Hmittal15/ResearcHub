@@ -23,13 +23,13 @@ load_dotenv()
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_KEY')
-USER_BUCKET_NAME = Variable.get('USER_BUCKET_NAME')
+USER_BUCKET_NAME = os.getenv('USER_BUCKET_NAME')
 
 
 s3client = boto3.client(
     's3',
-    aws_access_key_id=Variable.get('AWS_ACCESS_KEY'),
-    aws_secret_access_key=Variable.get('AWS_SECRET_KEY')
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_KEY')
 
 )
 
@@ -61,95 +61,99 @@ dag = DAG('researchub_dag',
 
 
 
-def subject_records(**context):    
-    subs = ['\"Computational Intelligence\"','Mathematics','Physics','\"Computer Science\"','Nanotechnology','Engineering','Energy',
-           '\"Earth Sciences\"','Geography','History','\"Health Informatics\"','\"Artificial Intelligence\"',
-           '\"Pattern Recognition\"','\"Data Engineering\"','Immunology']
-    sub_records = {key:{} for key in subs}
-    # fetching articles for each subject 
-    for k,v in sub_records.items():
-        sub_records[k]['articles']=[]
-        count = 1
-        response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Journal', s=1, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
-        total = response['result'][0]['total']
-        total = int(total)
-        count = 1
-        while (count<=total and len(sub_records[k]['articles'])<10):
-            print((count<=total and len(sub_records[k]['articles'])<10))
-            print(len(sub_records[k]['articles']))
-            response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Journal', s=count, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
-            records = response['records']
-            for record in records:
-                if len(sub_records[k]['articles'])>=10:
-                    break
-                test = record['url'][1]['value']
-                print(test)
-                if requests.get(test):
-                    print(requests.get(test))
-                    sub_records[k]['articles'].append(record)
+def subject_records(**context):
+    try:
 
-            count+=100
-    # fetching ConferencePaper for each subject
-    for k,v in sub_records.items():
-        print(k)
-        sub_records[k]['ConferencePapers']=[]
-        count = 1
-        response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=1, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
-        total = response['result'][0]['total']
-        total = int(total)
-        count = 1
-        while (count<=total and len(sub_records[k]['ConferencePapers'])<10):
-            print((count<=total and len(sub_records[k]['ConferencePapers'])<10))
-            print(len(sub_records[k]['ConferencePapers']))
-            response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=count, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
-            records = response['records']
-            for record in records:
-                if len(sub_records[k]['ConferencePapers'])>=10:
-                    break
-                if record['contentType'] == 'Chapter ConferencePaper':
-                    print("Chapter ConferencePaper")
+        subs = ['\"Computational Intelligence\"','Mathematics','Physics','\"Computer Science\"','Nanotechnology','Engineering','Energy',
+            '\"Earth Sciences\"','Geography','History','\"Health Informatics\"','\"Artificial Intelligence\"',
+            '\"Pattern Recognition\"','\"Data Engineering\"','Immunology']
+        sub_records = {key:{} for key in subs}
+        # fetching articles for each subject 
+        for k,v in sub_records.items():
+            sub_records[k]['articles']=[]
+            count = 1
+            response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Journal', s=1, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
+            total = response['result'][0]['total']
+            total = int(total)
+            count = 1
+            while (count<=total and len(sub_records[k]['articles'])<10):
+                print((count<=total and len(sub_records[k]['articles'])<10))
+                print(len(sub_records[k]['articles']))
+                response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Journal', s=count, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
+                records = response['records']
+                for record in records:
+                    if len(sub_records[k]['articles'])>=10:
+                        break
                     test = record['url'][1]['value']
                     print(test)
                     if requests.get(test):
                         print(requests.get(test))
-                        sub_records[k]['ConferencePapers'].append(record)
-            count+=100
-            
-    # fetching Books for each subject
-    for k,v in sub_records.items():
-        print(k)
-        pub_name=[]
-        sub_records[k]['Books']=[]
-        count = 1
-        response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=1, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
-        total = response['result'][0]['total']
-        total = int(total)
-        count = 1
-        while (count<=total and len(sub_records[k]['Books'])<10):
-            print((count<=total and len(sub_records[k]['Books'])<10))
-            print(len(sub_records[k]['Books']))
-            response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=count, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
-            records = response['records']
-            for record in records:
-                if len(sub_records[k]['Books'])>=10:
-                    break
-                if record['contentType'] == 'Chapter':
-                    print("Chapter")
-                    test = record['url'][1]['value']
-                    print(test)
-                    test = re.sub(r"_[^_]*$", "", test)
-                    print(test)
-                    if record["publicationName"] not in pub_name:
-                        print(record["publicationName"])
+                        sub_records[k]['articles'].append(record)
+
+                count+=100
+        # fetching ConferencePaper for each subject
+        for k,v in sub_records.items():
+            print(k)
+            sub_records[k]['ConferencePapers']=[]
+            count = 1
+            response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=1, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
+            total = response['result'][0]['total']
+            total = int(total)
+            count = 1
+            while (count<=total and len(sub_records[k]['ConferencePapers'])<10):
+                print((count<=total and len(sub_records[k]['ConferencePapers'])<10))
+                print(len(sub_records[k]['ConferencePapers']))
+                response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=count, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
+                records = response['records']
+                for record in records:
+                    if len(sub_records[k]['ConferencePapers'])>=10:
+                        break
+                    if record['contentType'] == 'Chapter ConferencePaper':
+                        print("Chapter ConferencePaper")
+                        test = record['url'][1]['value']
+                        print(test)
                         if requests.get(test):
                             print(requests.get(test))
-                            sub_records[k]['Books'].append(record)
-                            pub_name.append(record["publicationName"])
-            count+=100    
+                            sub_records[k]['ConferencePapers'].append(record)
+                count+=100
+                
+        # fetching Books for each subject
+        for k,v in sub_records.items():
+            print(k)
+            pub_name=[]
+            sub_records[k]['Books']=[]
+            count = 1
+            response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=1, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
+            total = response['result'][0]['total']
+            total = int(total)
+            count = 1
+            while (count<=total and len(sub_records[k]['Books'])<10):
+                print((count<=total and len(sub_records[k]['Books'])<10))
+                print(len(sub_records[k]['Books']))
+                response = requests.get('http://api.springernature.com/meta/v2/json?q=(subject:{subject} AND type:{tp} AND openaccess:true)&p=100&s={s}&api_key={api_key}'.format(subject=k, tp = 'Book', s=count, api_key='495c83e9c1f32a78c3ef25bd2d14127d')).json()
+                records = response['records']
+                for record in records:
+                    if len(sub_records[k]['Books'])>=10:
+                        break
+                    if record['contentType'] == 'Chapter':
+                        print("Chapter")
+                        test = record['url'][1]['value']
+                        print(test)
+                        test = re.sub(r"_[^_]*$", "", test)
+                        print(test)
+                        if record["publicationName"] not in pub_name:
+                            print(record["publicationName"])
+                            if requests.get(test):
+                                print(requests.get(test))
+                                sub_records[k]['Books'].append(record)
+                                pub_name.append(record["publicationName"])
+                count+=100    
 
-    context['ti'].xcom_push(key='sub_records', value=sub_records)
-    return sub_records
-
+        context['ti'].xcom_push(key='sub_records', value=sub_records)
+        return sub_records
+    
+    except:
+        pass
 
 def populate_table_and_csv(**context):
     
@@ -338,7 +342,7 @@ def populate_table_and_csv(**context):
 def vector_encoding():
     model = SentenceTransformer("all-MiniLM-L6-v2", device="cpu")
 
-    user_bucket = Variable.get('USER_BUCKET_NAME')
+    user_bucket = os.getenv('USER_BUCKET_NAME')
 
     table_name="springer_metadata"
     db_name="researchub.db"

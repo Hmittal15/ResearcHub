@@ -147,9 +147,10 @@ Final Project Proposal.pdf
 *.db
 query_doc.py
 recommend.py
-requirements.txt
 summary.py
 translate.py
-
-
+ce
+ce.pub
+ce_ppk.ppk
 *.DS_Store
+springer_metadata.csv
