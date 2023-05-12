@@ -65,20 +65,6 @@ clientlogs = boto3.client('logs',
                         )
 
 
-
-# # Checks if the passed file exists in the specified bucket
-# def check_if_file_exists_in_s3_bucket(bucket_name, file_name):
-#     try:
-#         s3client.head_object(Bucket=bucket_name, Key=file_name)
-#         return True
-
-#     except botocore.exceptions.ClientError as e:
-#         if e.response['Error']['Code'] == '404':
-#             return False
-#         else:
-#             raise
-
-
 #Generating logs with given message in cloudwatch
 def write_logs_researchub(message : str, endpoint : str, username='user-test'):
     log_group_name = "researchub"

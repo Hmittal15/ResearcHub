@@ -11,7 +11,7 @@ ACCESS_TOKEN = response.json()["access_token"]    #capture test user's access to
 header = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
 
 selected_doc="Thermodynamic Equilibrium Analysis of Steam Reforming Reaction of Radioactive Waste Oil"
-username="aa"
+username="admin"
 target_lang="fr"
 smart_doc_query="How are you?"
 

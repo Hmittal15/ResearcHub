@@ -13,13 +13,13 @@ load_dotenv()
 
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_KEY')
-USER_BUCKET_NAME = Variable.get('USER_BUCKET_NAME')
+USER_BUCKET_NAME = os.getenv('USER_BUCKET_NAME')
 
 
 s3client = boto3.client(
     's3',
-    aws_access_key_id=Variable.get('AWS_ACCESS_KEY'),
-    aws_secret_access_key=Variable.get('AWS_SECRET_KEY')
+    aws_access_key_id=os.getenv('AWS_ACCESS_KEY'),
+    aws_secret_access_key=os.getenv('AWS_SECRET_KEY')
 
 )
 

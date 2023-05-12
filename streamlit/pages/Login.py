@@ -47,7 +47,7 @@ def login():
         if login_button:
             st.session_state.username = username
             st.session_state.password = password
-            url = "http://34.75.99.189:8090/token"
+            url = "http://fastapi:8090/token"
             json_data = {"username": st.session_state.username, "password": st.session_state.password}
 
             response = requests.post(url, data=json_data, auth=("client_id", "client_secret"))        

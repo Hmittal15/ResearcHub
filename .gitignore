@@ -140,13 +140,17 @@ Pipfile
 
 # User defined
 *.env
-*.png
-*.jpeg
-*.jpg
 icons
 documentation.docx
 Pipfile
 Final Project Proposal.pdf
 *.db
-
+query_doc.py
+recommend.py
+summary.py
+translate.py
+ce
+ce.pub
+ce_ppk.ppk
 *.DS_Store
+springer_metadata.csv
