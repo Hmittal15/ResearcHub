@@ -130,9 +130,6 @@ dmypy.json
 
 # User defined
 *.env
-*.png
-*.jpeg
-*.jpg
 icons
 documentation.docx
 Pipfile

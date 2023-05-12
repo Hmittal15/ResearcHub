@@ -39,7 +39,51 @@ Technologies used in this project
 9. Deployed the application on a Google Cloud Platform (GCP) VM instance through a docker compose file, utilizing top-tier cloud computing infrastructure to provide fast and reliable hosting
 
 ## Files
-
+```
+📦 ResearcHub
+.github
+│  └─ workflows
+│     └─ fastapi.yml
+├─ .gitignore
+README.md
+airflow
+│  └─ app
+│     └─ dags
+│        ├─ delete_files_dag.py
+│        └─ researchub_dag.py
+├─ docker-compose.yml
+├─ fastapi
+│  ├─ Dockerfile
+│  ├─ base_model.py
+│  ├─ basic_func.py
+│  ├─ main.py
+│  ├─ requirements.txt
+│  └─ test_main.py
+├─ great_expectations
+│  ├─ .gitignore
+│  ├─ checkpoints
+│  │  ├─ first_checkpoint.yml
+│  │  └─ run_first_checkpoint.py
+│  ├─ expectations
+│  │  └─ .ge_store_backend_id
+│  ├─ greatExpectations.py
+│  ├─ great_expectations.yml
+│  ├─ plugins
+│  │  └─ custom_data_docs
+│  │     └─ styles
+│  │        └─ data_docs_custom_styles.css
+│  └─ run_first_checkpoint.py
+└─ streamlit
+   ├─ Dockerfile
+   ├─ Home.py
+   ├─ pages
+   │  ├─ Edit_details.py
+   │  ├─ Login.py
+   │  ├─ Sign_up.py
+   │  ├─ dashboard.py
+   │  └─ main.py
+   └─ requirements.txt
+```
 
 ## Installation
 To clone and replicate the project, please follow the steps below:
