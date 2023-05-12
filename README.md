@@ -1,3 +1,5 @@
+[![fastapi-ci](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml/badge.svg)](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml)
+
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![DockerHub](https://img.shields.io/badge/DockerHub-0db7ed?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
@@ -39,7 +41,51 @@ Technologies used in this project
 9. Deployed the application on a Google Cloud Platform (GCP) VM instance through a docker compose file, utilizing top-tier cloud computing infrastructure to provide fast and reliable hosting
 
 ## Files
-
+```
+📦 ResearcHub
+.github
+│  └─ workflows
+│     └─ fastapi.yml
+├─ .gitignore
+README.md
+airflow
+│  └─ app
+│     └─ dags
+│        ├─ delete_files_dag.py
+│        └─ researchub_dag.py
+├─ docker-compose.yml
+├─ fastapi
+│  ├─ Dockerfile
+│  ├─ base_model.py
+│  ├─ basic_func.py
+│  ├─ main.py
+│  ├─ requirements.txt
+│  └─ test_main.py
+├─ great_expectations
+│  ├─ .gitignore
+│  ├─ checkpoints
+│  │  ├─ first_checkpoint.yml
+│  │  └─ run_first_checkpoint.py
+│  ├─ expectations
+│  │  └─ .ge_store_backend_id
+│  ├─ greatExpectations.py
+│  ├─ great_expectations.yml
+│  ├─ plugins
+│  │  └─ custom_data_docs
+│  │     └─ styles
+│  │        └─ data_docs_custom_styles.css
+│  └─ run_first_checkpoint.py
+└─ streamlit
+   ├─ Dockerfile
+   ├─ Home.py
+   ├─ pages
+   │  ├─ Edit_details.py
+   │  ├─ Login.py
+   │  ├─ Sign_up.py
+   │  ├─ dashboard.py
+   │  └─ main.py
+   └─ requirements.txt
+```
 
 ## Installation
 To clone and replicate the project, please follow the steps below:
@@ -78,6 +124,9 @@ http://35.227.30.78:8000/
 
 ## Airflow DAGs:
 http://35.227.30.78:8080/
+
+## GitHub Continuous Integration:
+[![fastapi-ci](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml/badge.svg)](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml)
 
 ## FastAPI docs:
 http://35.227.30.78:8090/docs
