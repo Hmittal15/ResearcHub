@@ -21,7 +21,7 @@ if 'disable_logout' not in st.session_state:
     st.session_state.disable_logout = True
 
 def edit_page(my_token):
-    BASE_URL = 'http://fastapi:8090'
+    BASE_URL = 'http://localhost:8090'
 
     tab1, tab2 = st.tabs(["Forgot Password", "Change Plan"])
 
