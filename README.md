@@ -1,3 +1,5 @@
+[![fastapi-ci](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml/badge.svg)](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml)
+
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![DockerHub](https://img.shields.io/badge/DockerHub-0db7ed?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
@@ -122,6 +124,9 @@ http://35.227.30.78:8000/
 
 ## Airflow DAGs:
 http://35.227.30.78:8080/
+
+## GitHub Continuous Integration:
+[![fastapi-ci](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml/badge.svg)](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml)
 
 ## FastAPI docs:
 http://35.227.30.78:8090/docs
