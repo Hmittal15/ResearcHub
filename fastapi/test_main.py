@@ -4,14 +4,14 @@ from main import app
 client = TestClient(app)
 
 url = "/token"
-json_data = {"username": "admin", "password": "admin"}
+json_data = {"username": "h", "password": "h"}
 
 response = client.post(url, data=json_data, auth=("client_id", "client_secret"))     #login to get the access token
 ACCESS_TOKEN = response.json()["access_token"]    #capture test user's access token
 header = {"Authorization": f"Bearer {ACCESS_TOKEN}"}
 
 selected_doc="Thermodynamic Equilibrium Analysis of Steam Reforming Reaction of Radioactive Waste Oil"
-username="admin"
+username="h"
 target_lang="fr"
 smart_doc_query="How are you?"
 
@@ -19,7 +19,7 @@ smart_doc_query="How are you?"
 def test_login_for_access_token():
     response = client.post(
         url = "/token",
-        data = {"username": "admin", "password": "admin"},
+        data = {"username": "h", "password": "h"},
         auth=("client_id", "client_secret")
     )
     assert response.status_code == 200
