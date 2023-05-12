@@ -29,7 +29,7 @@ if 'disable_logout' not in st.session_state:
 
 # st.session_state.encode_flag = 0
 
-BASE_URL = "http://fastapi:8090"
+BASE_URL = "http://localhost:8090"
 
 if 'encode_flag' not in st.session_state:
     st.session_state.encode_flag=0
@@ -62,7 +62,7 @@ def main_page(my_token):
     st.markdown("<h1 style='text-align: center;'>ResearcHub</h1>", unsafe_allow_html=True)
     st.header("")
 
-    BASE_URL = "http://fastapi:8090"
+    BASE_URL = "http://localhost:8090"
 
     tab1, tab2 = st.tabs(["SEARCH BY TITLE", "SEARCH BY FILTERS"])
 

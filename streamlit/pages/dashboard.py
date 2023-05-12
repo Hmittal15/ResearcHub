@@ -26,7 +26,7 @@ if 'disable_logout' not in st.session_state:
 
 def dashboard_page(my_token):
     headers = {"Authorization": f"Bearer {my_token}"}
-    BASE_URL = "http://fastapi:8090"
+    BASE_URL = "http://localhost:8090"
 
     st.markdown("<h1 style='text-align: center;'>ANALYTICS</h1>", unsafe_allow_html=True)
     st.header("")

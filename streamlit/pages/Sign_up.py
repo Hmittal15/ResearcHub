@@ -23,7 +23,7 @@ if 'disable_logout' not in st.session_state:
 def signup():
     user_bucket_name = 'researchub'
     subscription_tiers = ['free', 'gold', 'platinum']
-    BASE_URL = 'http://fastapi:8090'
+    BASE_URL = 'http://localhost:8090'
 
     # Streamlit app
     st.title('Sign-up Page')
