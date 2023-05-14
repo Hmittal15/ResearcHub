@@ -1,6 +1,4 @@
-[![fastapi-ci](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml/badge.svg)](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml)
-
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?style=flat-square&logo=streamlit&logoColor=white)](https://streamlit.io/)
 [![DockerHub](https://img.shields.io/badge/DockerHub-0db7ed?style=flat-square&logo=docker&logoColor=white)](https://hub.docker.com/)
 [![GCP](https://img.shields.io/badge/GCP-4285F4?style=flat-square&logo=google-cloud&logoColor=white)](https://cloud.google.com/)
@@ -114,10 +112,10 @@ To clone and replicate the project, please follow the steps below:
 * RAPID_API_KEY = "your_key_here"
 
 ### Application demo:-
-
+![Demo](https://github.com/Hmittal15/Instacart-customer-order-analysis/assets/108916132/d1fef5de-fd4b-4dc3-ad6f-7f4e916baea2)
 
 ### Link to full explanatory video:-
-
+https://youtu.be/eG1IvwuZ9e4
 
 ## Application public link:
 http://35.227.30.78:8000/
