@@ -118,7 +118,7 @@ To clone and replicate the project, please follow the steps below:
 ## Link to full explanatory video:-
 https://youtu.be/eG1IvwuZ9e4
 
-## Technical documents:
+## Technical document:
 https://docs.google.com/document/d/1-GWEz08lyZdIzqKjxUH_mkB46KBEHLkUl31T9X-kV1Y/edit?usp=sharing
 
 ## Application public link:
@@ -132,8 +132,5 @@ http://35.227.30.78:8090/docs
 
 ## GitHub Continuous Integration:
 [![fastapi-ci](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml/badge.svg)](https://github.com/BigDataIA-Spring2023-Team-09/ResearcHub/actions/workflows/fastapi.yml)
-
-## Technical document:
-https://docs.google.com/document/d/1x2t97C4CWh-E8Rtmr6kRJsD-Z9fOeIUbViS4uFyuUvA/edit?usp=sharing
 
 ## You can find me on <a href="http://www.linkedin.com/in/harshit-mittal-52b292131"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/LinkedIn_logo_initials.png/768px-LinkedIn_logo_initials.png" width="17" height="17" /></a>
